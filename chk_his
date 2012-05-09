@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+use lib qw(/home/toshi/perl/lib);
+use strict;
+use HashDump;
+
+my %tweet_history;
+dbmopen(%tweet_history,'tweet.his',0644);
+
+my $tweet_history = \%tweet_history;
+
+HashDump->load($tweet_history);
+
+
+
+
+
