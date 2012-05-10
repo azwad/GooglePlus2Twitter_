@@ -269,8 +269,12 @@ sub compose_entry {
 		$quote			= '"' . $attachmentDisplayName . ' ' . $attachmentContent . '"';
 		$link			= $attachmentUrl0;
 	}elsif($myposttype eq 'reshare'){
-	  $body			= $annotation;
-		$quote			= '"' . $attachmentDisplayName . ' via ' . $original_publisher . '"';
+	  $body			= $annotation ;
+		if ($post_content){
+			$quote			= $original_publisher . ' says "' . $post_content . '"';
+		}else{
+			$quote			= $original_publisher . ' says "' . $attachmentDisplayName . ' ' . $attachmentContent  . '"';
+		}
 		$link			= $post_org_url;
 	}elsif($myposttype eq 'photo'){
 		$body			= $post_title || $post_content;
