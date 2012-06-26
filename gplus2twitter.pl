@@ -86,7 +86,7 @@ sub get_gplus_update {
 	my $mech = new WWW::Mechanize;
 	my $res = $mech->get($uri);
 	my $scraper = scraper {
-				process '//div[@class="Cg Gb"]', 'post[]'   => ['@id',sub{
+				process '//div[@class="Tg Sb"]', 'post[]'   => ['@id',sub{
 				s/update-//;
 				return $_;
 			}]
