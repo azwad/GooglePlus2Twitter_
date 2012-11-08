@@ -19,6 +19,7 @@ use HTTP::Request;
 use HTML::Scrubber;
 use Config::Pit;
 use WebService::Bitly;
+use Data::Dumper;
 
 #require G+ Twitter and  bit.ly API key and preset Config::Pit's yaml file in your ~/.pit directory
 
@@ -50,7 +51,7 @@ foreach my $post_id (@newer_post_id){
 	say "get post detail";
 	sleep 3;
 	my $post_detail = get_post_detail($gplus_pit_account,$post_id);
-	my $post_tweet = compose_entry($post_detail);
+	my $post_tweet = compose_entry($post_detail, $post_id);
 print encode_utf8($post_tweet) ."\n";
 
 ## run at the first time
@@ -63,6 +64,10 @@ print encode_utf8($post_tweet) ."\n";
 	eval  {$nettwitter->update( $post_tweet )};
 	if ($@) {
 		say "update failed because: $@\n" ;
+		open my $err_log, '>', './err.log';
+		print $err_log localtime ." : $post_id : tweet failed\n";
+		print $err_log "cause $@\n";
+		close $err_log;
 	}else{
 		say "update suceesful";
 		$tweet_history{$post_id} = localtime;
@@ -93,6 +98,7 @@ sub get_gplus_update {
 	};
 
 	my $scr = $scraper->scrape($res);
+	say @{$scr->{post}};
 	return  @post_id = @{$scr->{post}};
 }
 
@@ -136,6 +142,7 @@ sub initialize {
 
 sub compose_entry {
 	my $post_detail = shift;
+	my $post_id = shift;
 
 	my $post_verv							 = $post_detail->{verb} || undef;																							# 'post' or 'share'
 	my $post_type							 = $post_detail->{object}->{objectType} || undef;															# 'note' or 'activity'
@@ -258,6 +265,7 @@ sub compose_entry {
 				$myposttype = 'unknown';
 	}
 
+
 #say 'my post type ' . $myposttype;
 
 	if ($myposttype eq 'single'){
@@ -286,6 +294,12 @@ sub compose_entry {
 		$link			= $attachmentUrl0 || $post_url;
 	}else{
 		warn "unknown content";
+		open my $err_log, '>', './err.log';
+		print $err_log localtime ." : $post_id :\n";
+		print $err_log Dumper($post_detail);
+		print $err_log "\n";
+		close $err_log;
+		die;
 	}
 
 
