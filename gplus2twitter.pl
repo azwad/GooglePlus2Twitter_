@@ -20,6 +20,7 @@ use HTML::Scrubber;
 use Config::Pit;
 use WebService::Bitly;
 use Data::Dumper;
+use DB_File;
 
 #require G+ Twitter and  bit.ly API key and preset Config::Pit's yaml file in your ~/.pit directory
 
