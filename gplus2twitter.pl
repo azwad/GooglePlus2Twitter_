@@ -17,10 +17,10 @@ use Net::Twitter;
 use LWP::UserAgent;
 use HTTP::Request;
 use HTML::Scrubber;
-use Config::Pit;
 use WebService::Bitly;
 use Data::Dumper;
 use DB_File;
+use FindBin;
 
 #require G+ Twitter and  bit.ly API key and preset Config::Pit's yaml file in your ~/.pit directory
 
@@ -29,8 +29,11 @@ my $twitter_pit_account = 'twitter';
 my $bitly_pit_account = 'bit.ly';
 my $sleep_time = 10;
 
+my $history_db = $FindBin::Bin .'/'. 'tweet_his';
 my %tweet_history;
-dbmopen(%tweet_history,'tweet.his',0644);
+dbmopen(%tweet_history, $history_db,0644) or die "can't open $history_db";
+
+my $err_log = $FindBin::Bin .'/'. 'err.log';
 
 my @post_id = get_gplus_update($gplus_pit_account);
 my @newer_post_id = ();
@@ -61,14 +64,14 @@ print encode_utf8($post_tweet) ."\n";
 #next;																	#<----- second time commentout
 
 	my $nettwitter = initialize($twitter_pit_account);
-	sleep 10;
+#	sleep 10;
 	eval  {$nettwitter->update( $post_tweet )};
 	if ($@) {
 		say "update failed because: $@\n" ;
-		open my $err_log, '>', './err.log';
-		print $err_log localtime ." : $post_id : tweet failed\n";
-		print $err_log "cause $@\n";
-		close $err_log;
+		open my $err_log_fh, '>>', $err_log;
+		print $err_log_fh localtime ." : $post_id : tweet failed\n";
+		print $err_log_fh "cause $@\n";
+		close $err_log_fh;
 	}else{
 		say "update suceesful";
 		$tweet_history{$post_id} = localtime;
@@ -295,11 +298,11 @@ sub compose_entry {
 		$link			= $attachmentUrl0 || $post_url;
 	}else{
 		warn "unknown content";
-		open my $err_log, '>', './err.log';
-		print $err_log localtime ." : $post_id :\n";
-		print $err_log Dumper($post_detail);
-		print $err_log "\n";
-		close $err_log;
+		open my $err_log_fh, '>>', $err_log;
+		print $err_log_fh localtime ." : $post_id :\n";
+		print $err_log_fh Dumper($post_detail);
+		print $err_log_fh "\n";
+		close $err_log_fh;
 		die;
 	}
 
@@ -326,7 +329,7 @@ sub compose_entry {
 		my $length_footer =length($footer);
 		my $length_link = length($link);
 		my $length_post_tweet = length($post_tweet);
-    my $maxlength = 133;
+    my $maxlength = 130;
 
 		if (($length_post_tweet + $length_footer + $length_link) > $maxlength) {
 			$post_tweet = substr($post_tweet, 0, ($maxlength - $length_footer - $length_link -3) );

@@ -3,13 +3,26 @@
 use lib qw(/home/toshi/perl/lib);
 use strict;
 use HashDump;
+use feature qw(say);
+use DateTimeEasy qw(datestr);
+use DB_File;
 
 my %tweet_history;
-dbmopen(%tweet_history,'tweet.his',0644);
+dbmopen(%tweet_history,'tweet_his',0644) or die "cant open";
 
 my $tweet_history = \%tweet_history;
+my %reverse;
+while (my ($key, $values) = each %tweet_history){
+	my $date_str = datestr($values);
+	$reverse{$date_str} = $key;
+}
 
-HashDump->load($tweet_history);
+foreach my $key ( sort keys %reverse) {
+	say $key ." : ". $reverse{$key};
+}
+
+
+#HashDump->load($tweet_history);
 
 
 
