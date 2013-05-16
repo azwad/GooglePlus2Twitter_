@@ -95,7 +95,7 @@ sub get_gplus_update {
 	my $mech = new WWW::Mechanize;
 	my $res = $mech->get($uri);
 	my $scraper = scraper {
-				process '//div[@class="Tg Sb"]', 'post[]'   => ['@id',sub{
+				process '//div[@class="Tg Sb ChZ7Rc"]', 'post[]'   => ['@id',sub{
 				s/update-//;
 				return $_;
 			}]
@@ -186,7 +186,8 @@ sub compose_entry {
 		my $quote = '';
 		my $link = '';
 		my $post_tweet = '';
-		my $footer = ' ..[G+]';
+		my $header = '[G+]';
+		my $footer = ' ..';
 		my $anc = '\.';
 
 	if (
@@ -334,7 +335,7 @@ sub compose_entry {
 		if (($length_post_tweet + $length_footer + $length_link) > $maxlength) {
 			$post_tweet = substr($post_tweet, 0, ($maxlength - $length_footer - $length_link -3) );
    	}
-	 	return $post_tweet = decode_utf8($post_tweet) . $footer . ' ' . $link;
+	 	return $post_tweet = $header . decode_utf8($post_tweet) . $footer . ' ' . $link;
 }
 
 
