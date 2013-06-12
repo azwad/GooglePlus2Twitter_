@@ -133,7 +133,7 @@ sub initialize {
 		);
 
     my %opt = (
-			'traits'								=> ['API::REST', 'OAuth'],
+			'traits'								=> ['API::RESTv1_1', 'OAuth'],
 			'access_token'					=> $config->{access_token},
 			'access_token_secret'		=> $config->{access_token_secret},
 			'consumer_key'					=> $config->{consumer_key},
