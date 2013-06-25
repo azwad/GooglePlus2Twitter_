@@ -28,6 +28,8 @@ my $gplus_pit_account = 'GooglePlus';
 my $twitter_pit_account = 'twitter';
 my $bitly_pit_account = 'bit.ly';
 my $sleep_time = 10;
+my $gplus_class = '//div[@class="ChZ7Rc Tg Sb"]';
+
 
 my $history_db = $FindBin::Bin .'/'. 'tweet_his';
 my %tweet_history;
@@ -95,7 +97,7 @@ sub get_gplus_update {
 	my $mech = new WWW::Mechanize;
 	my $res = $mech->get($uri);
 	my $scraper = scraper {
-				process '//div[@class="Tg Sb ChZ7Rc"]', 'post[]'   => ['@id',sub{
+				process $gplus_class, 'post[]'   => ['@id',sub{
 				s/update-//;
 				return $_;
 			}]
