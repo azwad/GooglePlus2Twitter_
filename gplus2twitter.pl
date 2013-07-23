@@ -5,11 +5,9 @@ use warnings;
 use URI;
 use Web::Scraper;
 use WWW::Mechanize;
-#use YAML;
 use Encode;
 use Config::Pit;
 use feature qw( say );
-#use HashDump;
 use GooglePlusAPI;
 use utf8;
 use Encode;
@@ -18,7 +16,7 @@ use LWP::UserAgent;
 use HTTP::Request;
 use HTML::Scrubber;
 use WebService::Bitly;
-use Data::Dumper;
+#use Data::Dumper;
 use DB_File;
 use FindBin;
 
@@ -57,8 +55,7 @@ foreach my $post_id (@newer_post_id){
 	say "get post detail";
 	sleep 3;
 	my $post_detail = get_post_detail($gplus_pit_account,$post_id);
-	my $post_tweet = compose_entry($post_detail, $post_id);
-print encode_utf8($post_tweet) ."\n";
+	my $last_margin = 3;
 
 ## run at the first time
 
@@ -67,17 +64,32 @@ print encode_utf8($post_tweet) ."\n";
 
 	my $nettwitter = initialize($twitter_pit_account);
 #	sleep 10;
-	eval  {$nettwitter->update( $post_tweet )};
-	if ($@) {
-		say "update failed because: $@\n" ;
-		open my $err_log_fh, '>>', $err_log;
-		print $err_log_fh localtime ." : $post_id : tweet failed\n";
-		print $err_log_fh "cause $@\n";
-		close $err_log_fh;
-	}else{
-		say "update suceesful";
-		$tweet_history{$post_id} = localtime;
-		sleep( $sleep_time );
+	while (1){
+		my $post_tweet = compose_entry($post_detail, $post_id, $last_margin);
+		print encode_utf8($post_tweet) ."\n";
+		eval  {$nettwitter->update( $post_tweet )};
+		if ($@ =~ m/too long/){
+			say "update failed because: $@\n" ;
+			open my $err_log_fh, '>>', $err_log;
+			print $err_log_fh localtime ." : $post_id : tweet failed\n";
+			print $err_log_fh encode_utf8("cause $@  'try again'\n");
+			close $err_log_fh;
+			$last_margin += 2;
+			next;
+		}elsif($@){
+			say "update failed because: $@\n" ;
+			open my $err_log_fh, '>>', $err_log;
+			print $err_log_fh localtime ." : $post_id : tweet failed\n";
+			print $err_log_fh encode_utf8("cause $@\n");
+			close $err_log_fh;
+			$tweet_history{$post_id} = localtime;
+			last;
+		}else{
+			say "update suceesful";
+			$tweet_history{$post_id} = localtime;
+			sleep( $sleep_time );
+			last;
+		}
 	}
 }
 dbmclose(%tweet_history);
@@ -104,7 +116,7 @@ sub get_gplus_update {
 	};
 
 	my $scr = $scraper->scrape($res);
-	say @{$scr->{post}};
+#	say @{$scr->{post}};
 	return  @post_id = @{$scr->{post}};
 }
 
@@ -149,6 +161,7 @@ sub initialize {
 sub compose_entry {
 	my $post_detail = shift;
 	my $post_id = shift;
+	my $last_margin = shift || 3;
 
 	my $post_verv							 = $post_detail->{verb} || undef;																							# 'post' or 'share'
 	my $post_type							 = $post_detail->{object}->{objectType} || undef;															# 'note' or 'activity'
@@ -335,7 +348,7 @@ sub compose_entry {
     my $maxlength = 130;
 
 		if (($length_post_tweet + $length_footer + $length_link) > $maxlength) {
-			$post_tweet = substr($post_tweet, 0, ($maxlength - $length_footer - $length_link -3) );
+			$post_tweet = substr($post_tweet, 0, ($maxlength - $length_footer - $length_link - $last_margin) );
    	}
 	 	return $post_tweet = $header . decode_utf8($post_tweet) . $footer . ' ' . $link;
 }
